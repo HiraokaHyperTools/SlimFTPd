@@ -30,6 +30,7 @@
 #include "vfs.h"
 #include <algorithm>
 #include "tree.cpp"
+#include "mbcs_str.h"
 #define STRSAFE_NO_DEPRECATE
 #include <strsafe.h>
 
@@ -48,11 +49,11 @@ void VFS::Mount(const char *pszVirtual, const char *pszLocal)
 	while (pszVirtual[i] != 0) {
 		++i;
 		if (pszVirtual[i] == 0) break;
-		size_t j = strcspn(pszVirtual + i, "/");
+		size_t j = __mbscspn(pszVirtual + i, "/");
 		dir.assign(pszVirtual + i, j);
 		pparent = ptree;
 		ptree = ptree->_pdown;
-		while (ptree && _stricmp(ptree->_data.strVirtual.c_str(), dir.c_str())) ptree = ptree->_pright;
+		while (ptree && __mbsicmp(ptree->_data.strVirtual.c_str(), dir.c_str())) ptree = ptree->_pright;
 		if (!ptree) {
 			ptree = new tree<MOUNTPOINT>(pparent);
 			ptree->_data.strVirtual = dir;
@@ -84,7 +85,7 @@ DWORD VFS::GetDirectoryListing(const char *pszVirtual, DWORD dwIsNLST, listing_t
 		GetSystemTime(&stCutoff);
 		stCutoff.wYear--;
 		do {
-			if (!strcmp(w32fd.cFileName, ".") || !strcmp(w32fd.cFileName, "..")) continue;
+			if (!__mbscmp(w32fd.cFileName, ".") || !__mbscmp(w32fd.cFileName, "..")) continue;
 			FileTimeToSystemTime(&w32fd.ftLastWriteTime, &stFile);
 			if (dwIsNLST) {
 				strcpy_s(szLine, w32fd.cFileName);
@@ -122,13 +123,13 @@ DWORD VFS::Map(const char *pszVirtual, string &strLocal, tree<MOUNTPOINT> *ptree
 	const char *psz;
 	UINT_PTR dwLen;
 
-	psz = strchr(pszVirtual, '/');
+	psz = __mbschr(pszVirtual, '/');
 	if (psz) dwLen = psz - pszVirtual;
-	else dwLen = strlen(pszVirtual);
+	else dwLen = __strlen(pszVirtual);
 	while (ptree) {
-		if ((ptree->_data.strVirtual.length() == dwLen) && (!dwLen || !_strnicmp(pszVirtual, ptree->_data.strVirtual.c_str(), dwLen))) {
+		if ((ptree->_data.strVirtual.length() == dwLen) && (!dwLen || !__strnicmp(pszVirtual, ptree->_data.strVirtual.c_str(), dwLen))) {
 			if (psz) {
-				if (Map(psz + 1, strLocal, ptree->_pdown)) return 1;
+				if (Map(__mbsinc(psz), strLocal, ptree->_pdown)) return 1;
 				else {
 					if (ptree->_data.strLocal.length() != 0) {
 						strLocal = ptree->_data.strLocal;
@@ -157,14 +158,14 @@ tree<VFS::MOUNTPOINT> * VFS::FindMountPoint(const char *pszVirtual, tree<MOUNTPO
 	const char *psz;
 	UINT_PTR dwLen;
 
-	if (!strcmp(pszVirtual, "/")) return ptree;
-	psz = strchr(pszVirtual, '/');
+	if (!__mbscmp(pszVirtual, "/")) return ptree;
+	psz = __mbschr(pszVirtual, '/');
 	if (psz) dwLen = psz - pszVirtual;
-	else dwLen = strlen(pszVirtual);
+	else dwLen = __strlen(pszVirtual);
 	while (ptree) {
-		if ((ptree->_data.strVirtual.length() == dwLen) && (!dwLen || !_strnicmp(pszVirtual, ptree->_data.strVirtual.c_str(), dwLen))) {
+		if ((ptree->_data.strVirtual.length() == dwLen) && (!dwLen || !__strnicmp(pszVirtual, ptree->_data.strVirtual.c_str(), dwLen))) {
 			if (psz) {
-				return FindMountPoint(psz + 1, ptree->_pdown);
+				return FindMountPoint(__mbsinc(psz), ptree->_pdown);
 			} else {
 				return ptree;
 			}
@@ -180,38 +181,39 @@ void VFS::CleanVirtualPath(const char *pszVirtual, string &strNewVirtual)
 // Ex: /home/./user//...\ftp/  =>  /home/ftp
 {
 	const char *in = pszVirtual;
-	char *buf = new char[strlen(pszVirtual) + 4];
+	size_t bufSiz = strlen(pszVirtual) + 4;
+	char *buf = new char[bufSiz];
 	buf[0] = '\0'; buf[1] = '\0'; buf[2] = '\0';
 	char *out = buf + 3;
 	do {
-		*out = *in;
-		if (*out == '\\') *out = '/'; // convert backslashes to forward slashes
-		if ((*out == '\0') || (*out == '/')) {
-			if (out[-1] == '.') { // output ends with "."
-				if (out[-2] == '\0') --out; // entire output is "."
-				else if (out[-2] == '/') { // output ends with "/."
-					if (out[-3] == '\0') --out; // entire output is "/."
-					else out -= 2;
+		__mbsncpy_s(out, bufSiz - (out - buf), in, 1);
+		if (__mbsnextc(out) == '\\') *out = '/'; // convert backslashes to forward slashes
+		if ((__mbsnextc(out) == '\0') || (__mbsnextc(out) == '/')) {
+			if (__mbsprevc(buf, out, 1) == '.') { // output ends with "."
+				if (__mbsprevc(buf, out, 2) == '\0') out = __mbsdec(buf, out, 1); // entire output is "."
+				else if (__mbsprevc(buf, out, 2) == '/') { // output ends with "/."
+					if (__mbsprevc(buf, out, 3) == '\0') out = __mbsdec(buf, out, 1); // entire output is "/."
+					else out  = __mbsdec(buf, out, 2);
 				}
-				else if (out[-2] == '.') { // output ends with ".."
-					if (out[-3] == '\0') out -= 2; // entire output is ".."
-					else if (out[-3] == '/') { // output ends with "/.."
-						if (out[-4] == '\0') out -= 2; // entire output is "/.."
+				else if (__mbsprevc(buf, out, 2) == '.') { // output ends with ".."
+					if (__mbsprevc(buf, out, 3) == '\0') out = __mbsdec(buf, out, 2); // entire output is ".."
+					else if (__mbsprevc(buf, out, 3) == '/') { // output ends with "/.."
+						if (__mbsprevc(buf, out, 4) == '\0') out = __mbsdec(buf, out, 2); // entire output is "/.."
 						else {
-							out -= 3;
-							while ((out[-1] != '\0') && (out[-1] != '/')) --out;
+							out = __mbsdec(buf, out, 3);
+							while ((__mbsprevc(buf, out, 1) != '\0') && (__mbsprevc(buf, out, 1) != '/')) out = __mbsdec(buf, out, 1);
 						}
 					}
 				}
-				else ++in;
+				else in = __mbsinc(in);
 			}
 			else {
-				++in;
-				if (out[-1] != '/') ++out;
+				in = __mbsinc(in);
+				if (__mbsprevc(buf, out, 1) != '/') out = __mbsinc(out);
 			}
 		}
-		else ++in, ++out;
-	} while (in[-1] != '\0');
+		else in = __mbsinc(in), out = __mbsinc(out);
+	} while (__mbsprevc(pszVirtual, in, 1) != '\0');
 	strNewVirtual = buf + 3;
 	delete[] buf;
 }
@@ -235,17 +237,20 @@ bool VFS::WildcardMatch(const char *pszFilespec, const char *pszFilename)
 {
 	if (*pszFilespec == 0) return true;
 	while (*pszFilespec) {
-		if (*pszFilespec == '*') {
-			pszFilespec++;
+		if (__mbsnextc(pszFilespec) == '*') {
+			pszFilespec = __mbsinc(pszFilespec);
 			do {
 				if (WildcardMatch(pszFilespec, pszFilename)) return true;
-			} while (*pszFilename++);
+				bool next = __mbsnextc(pszFilename) != 0;
+				pszFilename = __mbsinc(pszFilename);
+				if (!next) break;
+			} while (true);
 			return false;
-		} else if (((*pszFilespec | 0x20) != (*pszFilename | 0x20)) && (*pszFilespec != '?')) {
+		} else if (__mbctolower(__mbsnextc(pszFilespec)) != __mbctolower(__mbsnextc(pszFilename)) && (*pszFilespec != '?')) {
 			return false;
 		}
-		pszFilespec++;
-		pszFilename++;
+		pszFilespec = __mbsinc(pszFilespec);
+		pszFilename = __mbsinc(pszFilename);
 	}
 	if (!*pszFilespec && !*pszFilename) return true;
 	else return false;
@@ -259,7 +264,7 @@ LPVOID VFS::FindFirstFile(const char *pszVirtual, WIN32_FIND_DATA *pw32fd)
 	const char *psz;
 	string str;
 
-	psz = strrchr(pszVirtual, '/');
+	psz = __mbsrchr(pszVirtual, '/');
 	if (psz == NULL) return NULL;
 	str.assign(pszVirtual, psz);
 	pfd = new FINDDATA;
@@ -283,7 +288,7 @@ bool VFS::FindNextFile(LPVOID lpFindHandle, WIN32_FIND_DATA *pw32fd)
 
 	while (pfd->ptree) {
 		str = pfd->ptree->_data.strVirtual;
-		if (str.find_first_of('.') == string::npos) str.push_back('.');
+		if (__mbschr(str.c_str(), '.') == NULL) str.push_back('.');
 		if (WildcardMatch(pfd->strFilespec.c_str(), str.c_str())) {
 			GetMountPointFindData(pfd->ptree, pw32fd);
 			pfd->ptree = pfd->ptree->_pright;

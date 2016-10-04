@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="SlimFTPd31"
 	ProjectGUID="{06EF787B-A2B5-4D63-9B1B-C5614640D8B6}"
+	RootNamespace="SlimFTPd31"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -19,7 +20,6 @@
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="1"
-			InheritedPropertySheets="C:\Program Files\Microsoft Visual Studio 8\VC\VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS"
 				MinimalRebuild="true"
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="false"
@@ -99,7 +99,6 @@
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
 			ConfigurationType="1"
-			InheritedPropertySheets="C:\Program Files\Microsoft Visual Studio 8\VC\VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -121,8 +120,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				OmitFramePointers="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
-				RuntimeLibrary="2"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS"
+				RuntimeLibrary="0"
 				TreatWChar_tAsBuiltInType="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -208,6 +207,10 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
+			<File
+				RelativePath=".\mbcs_str.h"
+				>
+			</File>
 			<File
 				RelativePath="permdb.h"
 				>

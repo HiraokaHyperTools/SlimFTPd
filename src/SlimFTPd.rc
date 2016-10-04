@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// âpåÍ (ïƒçë) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -53,7 +53,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,18,0,0
+ FILEVERSION 3,18,2,0
  PRODUCTVERSION 3,18,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
@@ -61,7 +61,7 @@ VS_VERSION_INFO VERSIONINFO
 #else
  FILEFLAGS 0x0L
 #endif
- FILEOS 0x4L
+ FILEOS 0x40004L
  FILETYPE 0x1L
  FILESUBTYPE 0x0L
 BEGIN
@@ -72,9 +72,9 @@ BEGIN
             VALUE "FileDescription", "SlimFTPd"
             VALUE "FileVersion", "3.18"
             VALUE "InternalName", "SlimFTPd"
-            VALUE "LegalCopyright", "Copyright (C) 2001-2006 WhitSoft Development"
+            VALUE "LegalCopyright", "Copyright (C) 2001-2006 WhitSoft Development \r\n2010, HIRAOKA HYPERS TOOLS, Inc."
             VALUE "OriginalFilename", "SlimFTPd.exe"
-            VALUE "ProductVersion", "3.18"
+            VALUE "ProductVersion", "3.18r2"
         END
     END
     BLOCK "VarFileInfo"
@@ -83,7 +83,7 @@ BEGIN
     END
 END
 
-#endif    // English (U.S.) resources
+#endif    // âpåÍ (ïƒçë) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -36,6 +36,7 @@
 #include "userdb.h"
 #include "vfs.h"
 #include "tree.cpp"
+#include "mbcs_str.h"
 
 using namespace std;
 
@@ -197,7 +198,7 @@ bool Startup()
 
 	// Construct log and config filenames
 	GetModuleFileName(0,szLogFile,512);
-	*strrchr(szLogFile, '\\') = 0;
+	*__mbsrchr(szLogFile, '\\') = 0;
 	strcpy_s(szConfFile,szLogFile);
 	strcat_s(szLogFile, "\\SlimFTPd.log");
 	strcat_s(szConfFile, "\\SlimFTPd.conf");
@@ -300,19 +301,19 @@ bool ConfParseScript(const char *pszFileName)
 			break;
 		}
 		psz=sz;
-		while (*psz==' ' || *psz=='\t') psz++;
+		while (*psz==' ' || *psz=='\t') psz = __mbsinc(psz);
 		if (!*psz || *psz=='#') continue;
 
 		if (*psz=='<') {
-			psz2=strchr(psz,'>');
+			psz2=__mbschr(psz,'>');
 			if (psz2) {
 				*(psz2++)=0;
-				while (*psz2==' ' || *psz2=='\t') psz2++;
+				while (*psz2==' ' || *psz2=='\t') psz2 = __mbsinc(psz2);
 				if (*psz2) {
 					LogConfError("Syntax error. Expected end of line after '>'.",dwLine,0);
 					break;
 				}
-				psz++;
+				psz = __mbsinc(psz);
 			} else {
 				LogConfError("Syntax error. Expected '>' before end of line.",dwLine,0);
 				break;
@@ -321,7 +322,7 @@ bool ConfParseScript(const char *pszFileName)
 
 		dwTokens=SplitTokens(psz);
 
-		if (!_stricmp(psz,"BindInterface")) {
+		if (!__mbsicmp(psz,"BindInterface")) {
 			if (dwTokens==2) {
 				if (!ConfSetBindInterface(GetToken(psz,2),dwLine)) break;
 			} else {
@@ -330,7 +331,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"BindPort")) {
+		else if (!__mbsicmp(psz,"BindPort")) {
 			if (dwTokens==2) {
 				if (!ConfSetBindPort(GetToken(psz,2),dwLine)) break;
 			} else {
@@ -339,7 +340,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"MaxConnections")) {
+		else if (!__mbsicmp(psz,"MaxConnections")) {
 			if (dwTokens==2) {
 				if (!ConfSetMaxConnections(GetToken(psz,2),dwLine)) break;
 			} else {
@@ -348,7 +349,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"CommandTimeout")) {
+		else if (!__mbsicmp(psz,"CommandTimeout")) {
 			if (dwTokens==2) {
 				if (!ConfSetCommandTimeout(GetToken(psz,2),dwLine)) break;
 			} else {
@@ -357,7 +358,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"ConnectTimeout")) {
+		else if (!__mbsicmp(psz,"ConnectTimeout")) {
 			if (dwTokens==2) {
 				if (!ConfSetConnectTimeout(GetToken(psz,2),dwLine)) break;
 			} else {
@@ -366,7 +367,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"LookupHosts")) {
+		else if (!__mbsicmp(psz,"LookupHosts")) {
 			if (dwTokens==2) {
 				if (!ConfSetLookupHosts(GetToken(psz,2),dwLine)) break;
 			} else {
@@ -375,7 +376,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"User")) {
+		else if (!__mbsicmp(psz,"User")) {
 			if (!strUser.empty()) {
 				LogConfError("<User> directive invalid inside User block.",dwLine,0);
 				break;
@@ -391,7 +392,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 		
-		else if (!_stricmp(psz,"/User")) {
+		else if (!__mbsicmp(psz,"/User")) {
 			if (strUser.empty()) {
 				LogConfError("</User> directive invalid outside of User block.",dwLine,0);
 				break;
@@ -403,7 +404,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"Password")) {
+		else if (!__mbsicmp(psz,"Password")) {
 			if (strUser.empty()) {
 				LogConfError("Password directive invalid outside of User block.",dwLine,0);
 				break;
@@ -415,7 +416,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"Mount")) {
+		else if (!__mbsicmp(psz,"Mount")) {
 			if (strUser.empty()) {
 				LogConfError("Mount directive invalid outside of User block.",dwLine,0);
 				break;
@@ -427,7 +428,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"Allow")) {
+		else if (!__mbsicmp(psz,"Allow")) {
 			if (strUser.empty()) {
 				LogConfError("Allow directive invalid outside of User block.",dwLine,0);
 				break;
@@ -439,7 +440,7 @@ bool ConfParseScript(const char *pszFileName)
 			}
 		}
 
-		else if (!_stricmp(psz,"Deny")) {
+		else if (!__mbsicmp(psz,"Deny")) {
 			if (strUser.empty()) {
 				LogConfError("Deny directive invalid outside of User block.",dwLine,0);
 				break;
@@ -468,11 +469,11 @@ bool ConfSetBindInterface(const char *pszArg, DWORD dwLine)
 	HOSTENT *phe;
 	DWORD dw;
 
-	if (!_stricmp(pszArg,"All")) {
+	if (!__mbsicmp(pszArg,"All")) {
 		saiListen.sin_addr.S_un.S_addr=INADDR_ANY;
-	} else if (!_stricmp(pszArg,"Local")) {
+	} else if (!__mbsicmp(pszArg,"Local")) {
 		saiListen.sin_addr.S_un.S_addr=htonl(INADDR_LOOPBACK);
-	} else if (!_stricmp(pszArg,"LAN")) {
+	} else if (!__mbsicmp(pszArg,"LAN")) {
 		saiListen.sin_addr.S_un.S_addr=INADDR_NONE;
 		gethostname(sz,512);
 		phe=gethostbyname(sz);
@@ -488,7 +489,7 @@ bool ConfSetBindInterface(const char *pszArg, DWORD dwLine)
 			LogConfError("BindInterface directive could not find a LAN interface.",dwLine,0);
 			return false;
 		}
-	} else if (!_stricmp(pszArg,"WAN")) {
+	} else if (!__mbsicmp(pszArg,"WAN")) {
 		saiListen.sin_addr.S_un.S_addr=INADDR_NONE;
 		gethostname(sz,512);
 		phe=gethostbyname(sz);
@@ -532,7 +533,7 @@ bool ConfSetMaxConnections(const char *pszArg, DWORD dwLine)
 {
 	DWORD dw;
 
-	if (!_stricmp(pszArg,"Off")) {
+	if (!__mbsicmp(pszArg,"Off")) {
 		dwMaxConnections=-1;
 		return true;
 	} else {
@@ -577,10 +578,10 @@ bool ConfSetConnectTimeout(const char *pszArg, DWORD dwLine)
 
 bool ConfSetLookupHosts(const char *pszArg, DWORD dwLine)
 {
-	if (!_stricmp(pszArg,"Off")) {
+	if (!__mbsicmp(pszArg,"Off")) {
 		bLookupHosts = false;
 		return true;
-	} else if (!_stricmp(pszArg,"On")) {
+	} else if (!__mbsicmp(pszArg,"On")) {
 		bLookupHosts = true;
 		return true;
 	} else {
@@ -591,7 +592,7 @@ bool ConfSetLookupHosts(const char *pszArg, DWORD dwLine)
 
 bool ConfAddUser(const char *pszArg, DWORD dwLine)
 {
-	if (strlen(pszArg)<32) {
+	if (__strlen(pszArg)<32) {
 		if (pUsers->Add(pszArg)) {
 			return true;
 		} else {
@@ -606,7 +607,7 @@ bool ConfAddUser(const char *pszArg, DWORD dwLine)
 
 bool ConfSetUserPassword(const char *pszUser, const char *pszArg, DWORD dwLine)
 {
-	if (strlen(pszArg)<32) {
+	if (__strlen(pszArg)<32) {
 		pUsers->SetPassword(pszUser,pszArg);
 		return true;
 	} else {
@@ -662,15 +663,15 @@ bool ConfSetPermission(DWORD dwMode, const char *pszUser, const char *pszVirtual
 	if (!pperms) return false;
 
 	while (*pszPerms) {
-		if (!_stricmp(pszPerms,"Read")) {
+		if (!__mbsicmp(pszPerms,"Read")) {
 			pperms->SetPerm(strVirtual.c_str(), PERM_READ, dwMode);
-		} else if (!_stricmp(pszPerms,"Write")) {
+		} else if (!__mbsicmp(pszPerms,"Write")) {
 			pperms->SetPerm(strVirtual.c_str(), PERM_WRITE, dwMode);
-		} else if (!_stricmp(pszPerms,"List")) {
+		} else if (!__mbsicmp(pszPerms,"List")) {
 			pperms->SetPerm(strVirtual.c_str(), PERM_LIST, dwMode);
-		} else if (!_stricmp(pszPerms,"Admin")) {
+		} else if (!__mbsicmp(pszPerms,"Admin")) {
 			pperms->SetPerm(strVirtual.c_str(), PERM_ADMIN, dwMode);
-		} else if (!_stricmp(pszPerms,"All")) {
+		} else if (!__mbsicmp(pszPerms,"All")) {
 			pperms->SetPerm(strVirtual.c_str(), PERM_READ, dwMode);
 			pperms->SetPerm(strVirtual.c_str(), PERM_WRITE, dwMode);
 			pperms->SetPerm(strVirtual.c_str(), PERM_LIST, dwMode);
@@ -754,10 +755,10 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			continue;
 		}
 
-		if (pszParam = strchr(szCmd, ' ')) *(pszParam++) = 0;
-		else pszParam = szCmd+strlen(szCmd);
+		if (pszParam = __mbschr(szCmd, ' ')) *(pszParam++) = 0;
+		else pszParam = szCmd+__strlen(szCmd);
 
-		if (!_stricmp(szCmd, "USER")) {
+		if (!__mbsicmp(szCmd, "USER")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 				continue;
@@ -777,7 +778,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		if (!_stricmp(szCmd, "PASS")) {
+		if (!__mbsicmp(szCmd, "PASS")) {
 			if (strUser.empty()) {
 				SocketSendString(sCmd, "503 Bad sequence of commands. Send USER first.\r\n");
 			} else if (isLoggedIn) {
@@ -806,7 +807,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "REIN")) {
+		else if (!__mbsicmp(szCmd, "REIN")) {
 			if (isLoggedIn) {
 				isLoggedIn = false;
 				dwActiveConnections--;
@@ -819,20 +820,20 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			SocketSendString(sCmd, "220 REIN command successful.\r\n");
 		}
 
-		else if (!_stricmp(szCmd, "HELP")) {
+		else if (!__mbsicmp(szCmd, "HELP")) {
 			SocketSendString(sCmd, "214 For help, please visit www.whitsoftdev.com.\r\n");
 		}
 
-		else if (!_stricmp(szCmd, "FEAT")) {
+		else if (!__mbsicmp(szCmd, "FEAT")) {
 			SocketSendString(sCmd, "211-Extensions supported:\r\n SIZE\r\n REST STREAM\r\n MDTM\r\n TVFS\r\n211 END\r\n");
 		}
 
-		else if (!_stricmp(szCmd, "SYST")) {
+		else if (!__mbsicmp(szCmd, "SYST")) {
 			sprintf_s(szOutput, "215 WIN32 Type: L8 Version: %s\r\n", SERVERID);
 			SocketSendString(sCmd, szOutput);
 		}
 
-		else if (!_stricmp(szCmd, "QUIT")) {
+		else if (!__mbsicmp(szCmd, "QUIT")) {
 			if (isLoggedIn) {
 				isLoggedIn = false;
 				dwActiveConnections--;
@@ -845,11 +846,11 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			break;
 		}
 
-		else if (!_stricmp(szCmd, "NOOP")) {
+		else if (!__mbsicmp(szCmd, "NOOP")) {
 			SocketSendString(sCmd, "200 NOOP command successful.\r\n");
 		}
 
-		else if (!_stricmp(szCmd, "PWD") || !_stricmp(szCmd, "XPWD")) {
+		else if (!__mbsicmp(szCmd, "PWD") || !__mbsicmp(szCmd, "XPWD")) {
 			if (!isLoggedIn) {
 				SocketSendString(sCmd, "530 Not logged in.\r\n");
 			} else {
@@ -858,7 +859,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "CWD") || !_stricmp(szCmd, "XCWD")) {
+		else if (!__mbsicmp(szCmd, "CWD") || !__mbsicmp(szCmd, "XCWD")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -876,7 +877,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "CDUP") || !_stricmp(szCmd, "XCUP")) {
+		else if (!__mbsicmp(szCmd, "CDUP") || !__mbsicmp(szCmd, "XCUP")) {
 			if (!isLoggedIn) {
 				SocketSendString(sCmd, "530 Not logged in.\r\n");
 			} else {
@@ -887,7 +888,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd,"TYPE")) {
+		else if (!__mbsicmp(szCmd,"TYPE")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -897,7 +898,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "REST")) {
+		else if (!__mbsicmp(szCmd, "REST")) {
 			if (!*pszParam || (!(dw = StrToInt(pszParam)) && (*pszParam!='0'))) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -909,7 +910,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "PORT")) {
+		else if (!__mbsicmp(szCmd, "PORT")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -920,8 +921,8 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 				for (dw = 0; dw < 6; dw++) {
 					if (dw < 4) ((unsigned char *)&saiData.sin_addr)[dw] = (unsigned char)StrToInt(pszParam);
 					else ((unsigned char *)&saiData.sin_port)[dw-4] = (unsigned char)StrToInt(pszParam);
-					if (!(pszParam = strchr(pszParam, ','))) break;
-					pszParam++;
+					if (!(pszParam = __mbschr(pszParam, ','))) break;
+					pszParam = __mbsinc(pszParam);
 				}
 				if (dw == 5) {
 					if (sPasv) {
@@ -936,7 +937,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "PASV")) {
+		else if (!__mbsicmp(szCmd, "PASV")) {
 			if (!isLoggedIn) {
 				SocketSendString(sCmd, "530 Not logged in.\r\n");
 			} else {
@@ -955,11 +956,11 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "LIST") || !_stricmp(szCmd, "NLST")) {
+		else if (!__mbsicmp(szCmd, "LIST") || !__mbsicmp(szCmd, "NLST")) {
 			if (!isLoggedIn) {
 				SocketSendString(sCmd, "530 Not logged in.\r\n");
 			} else {
-				if (*pszParam == '-') if (pszParam = strchr(pszParam, ' ')) pszParam++;
+				if (__mbsnextc(pszParam) == '-') if (pszParam = __mbschr(pszParam, ' ')) pszParam = __mbsinc(pszParam);
 				if (pszParam && *pszParam) {
 					pVFS->ResolveRelative(strCurrentVirtual.c_str(), pszParam, strNewVirtual);
 				}
@@ -977,7 +978,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 							}
 							listing.clear();
 							closesocket(sData);
-							sprintf_s(szOutput, "226 %s command successful.\r\n", _stricmp(szCmd, "NLST") ? "LIST" : "NLST");
+							sprintf_s(szOutput, "226 %s command successful.\r\n", __mbsicmp(szCmd, "NLST") ? "LIST" : "NLST");
 							SocketSendString(sCmd, szOutput);
 						} else {
 							listing.clear();
@@ -994,11 +995,11 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "STAT")) {
+		else if (!__mbsicmp(szCmd, "STAT")) {
 			if (!isLoggedIn) {
 				SocketSendString(sCmd, "530 Not logged in.\r\n");
 			} else {
-				if (*pszParam == '-') if (pszParam = strchr(pszParam, ' ')) pszParam++;
+				if (__mbsnextc(pszParam) == '-') if (pszParam = __mbschr(pszParam, ' ')) pszParam = __mbsinc(pszParam);
 				if (pszParam && *pszParam) {
 					pVFS->ResolveRelative(strCurrentVirtual.c_str(), pszParam, strNewVirtual);
 				}
@@ -1025,7 +1026,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "RETR")) {
+		else if (!__mbsicmp(szCmd, "RETR")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -1072,7 +1073,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "STOR") || !_stricmp(szCmd, "APPE")) {
+		else if (!__mbsicmp(szCmd, "STOR") || !__mbsicmp(szCmd, "APPE")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd,"501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -1085,7 +1086,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 						sprintf_s(szOutput, "550 \"%s\": Unable to open file.\r\n", strNewVirtual.c_str());
 						SocketSendString(sCmd, szOutput);
 					} else {
-						if (_stricmp(szCmd, "APPE") == 0) {
+						if (__mbsicmp(szCmd, "APPE") == 0) {
 							SetFilePointer(hFile, 0, 0, FILE_END);
 						}
 						else {
@@ -1122,7 +1123,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "ABOR")) {
+		else if (!__mbsicmp(szCmd, "ABOR")) {
 			if (sPasv) {
 				closesocket(sPasv);
 				sPasv = 0;
@@ -1131,7 +1132,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			SocketSendString(sCmd,"200 ABOR command successful.\r\n");
 		}
 
-		else if (!_stricmp(szCmd, "SIZE")) {
+		else if (!__mbsicmp(szCmd, "SIZE")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -1155,7 +1156,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "MDTM")) {
+		else if (!__mbsicmp(szCmd, "MDTM")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -1224,7 +1225,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "DELE")) {
+		else if (!__mbsicmp(szCmd, "DELE")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -1253,7 +1254,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "RNFR")) {
+		else if (!__mbsicmp(szCmd, "RNFR")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -1276,7 +1277,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "RNTO")) {
+		else if (!__mbsicmp(szCmd, "RNTO")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -1301,7 +1302,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "MKD") || !_stricmp(szCmd, "XMKD")) {
+		else if (!__mbsicmp(szCmd, "MKD") || !__mbsicmp(szCmd, "XMKD")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -1325,7 +1326,7 @@ bool WINAPI ConnectionThread(SOCKET sCmd)
 			}
 		}
 
-		else if (!_stricmp(szCmd, "RMD") || !_stricmp(szCmd, "XRMD")) {
+		else if (!__mbsicmp(szCmd, "RMD") || !__mbsicmp(szCmd, "XRMD")) {
 			if (!*pszParam) {
 				SocketSendString(sCmd, "501 Syntax error in parameters or arguments.\r\n");
 			} else if (!isLoggedIn) {
@@ -1480,7 +1481,7 @@ bool DoSocketFileIO(SOCKET sCmd, SOCKET sData, HANDLE hFile, DWORD dwDirection, 
 			ioctlsocket(sCmd, FIONREAD, &dw);
 			if (dw) {
 				SocketReceiveString(sCmd, szBuffer, 511);
-				if (!_stricmp(szBuffer, "ABOR")) {
+				if (!__mbsicmp(szBuffer, "ABOR")) {
 					*pdwAbortFlag = 1;
 					return false;
 				} else {

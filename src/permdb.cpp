@@ -30,6 +30,7 @@
 #include "permdb.h"
 #include "tree.h"
 #include "tree.cpp"
+#include "mbcs_str.h"
 
 PermDB::PermDB()
 {
@@ -48,10 +49,10 @@ void PermDB::SetPerm(const char *pszVirtual, DWORD dwPermId, DWORD dwStatus)
 	strcpy_s(sz, pszVirtual + 1);
 	psz = sz;
 	while (*psz) {
-		if (pszCut = strchr(psz, '/')) *pszCut = 0;
+		if (pszCut = __mbschr(psz, '/')) *pszCut = 0;
 		pparent = ptree;
 		ptree = ptree->_pdown;
-		while (ptree && _stricmp(ptree->_data.strVirtual.c_str(), psz)) ptree = ptree->_pright;
+		while (ptree && __mbsicmp(ptree->_data.strVirtual.c_str(), psz)) ptree = ptree->_pright;
 		if (!ptree) {
 			ptree=new tree<FTPPERM>(pparent);
 			ptree->_data.strVirtual = psz;
@@ -61,7 +62,7 @@ void PermDB::SetPerm(const char *pszVirtual, DWORD dwPermId, DWORD dwStatus)
 			ptree->_data.dwPerms[PERM_ADMIN] = -1;
 		}
 		if (!pszCut) break;
-		psz = pszCut + 1;
+		psz = __mbsinc(pszCut);
 	}
 	ptree->_data.strVirtual = psz;
 	ptree->_data.dwPerms[dwPermId] = dwStatus;
@@ -78,13 +79,13 @@ DWORD PermDB::GetPermFunc(const char *pszVirtual, DWORD dwPermId, tree<FTPPERM> 
 	DWORD dw;
 	UINT_PTR dwLen;
 
-	psz = strchr(pszVirtual, '/');
+	psz = __mbschr(pszVirtual, '/');
 	if (psz) dwLen = psz - pszVirtual;
-	else dwLen = strlen(pszVirtual);
+	else dwLen = __strlen(pszVirtual);
 	while (ptree) {
 		if ((ptree->_data.strVirtual.length() == dwLen) && (!dwLen || !_strnicmp(pszVirtual, ptree->_data.strVirtual.c_str(), dwLen))) {
 			if (psz) {
-				dw = GetPermFunc(psz + 1, dwPermId, ptree->_pdown);
+				dw = GetPermFunc(__mbsinc(psz), dwPermId, ptree->_pdown);
 				if (dw != -1) return dw;
 				else return ptree->_data.dwPerms[dwPermId];
 			} else {
