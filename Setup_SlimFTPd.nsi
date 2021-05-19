@@ -109,6 +109,15 @@ Section "${APP} サービス登録と実行"
   DetailPrint "結果: $0"
 SectionEnd
 
+Section "Windows Firewall 許可"
+  SectionIn 1 2
+  
+  ExecWait 'netsh.exe advfirewall firewall delete rule name="SlimFTPd"' $0
+  DetailPrint "結果: $0"
+  ExecWait 'netsh.exe advfirewall firewall add rule name="SlimFTPd" dir=in action=allow program="$INSTDIR\SlimFTPd.exe" profile=any' $0
+  DetailPrint "結果: $0"
+SectionEnd
+
 ;--------------------------------
 
 ; Uninstaller
