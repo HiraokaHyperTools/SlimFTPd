@@ -7,10 +7,19 @@
 
 ;--------------------------------
 
+Unicode true
+
 !define APP "SlimFTPd"
 
+!system 'DefineAsmVer.exe "src\Release\SlimFTPd31.exe" "!define VER ""[VER]"" " > Appver.tmp'
+!include "Appver.tmp"
+!searchreplace APV ${VER} "." "_"
+
+!system 'MySign "src\Release\SlimFTPd31.exe" "src\ServiceTool.exe"'
+!finalize 'MySign "%1"'
+
 ; The name of the installer
-Name "${APP}"
+Name "${APP} ${VER}"
 
 ; The file to write
 OutFile "Setup_${APP}.exe"
@@ -24,6 +33,8 @@ InstallDirRegKey HKLM "Software\${APP}" "Install_Dir"
 
 ; Request application privileges for Windows Vista
 RequestExecutionLevel admin
+
+XPStyle on
 
 ;--------------------------------
 
@@ -61,7 +72,7 @@ Section ""
   SetOutPath $INSTDIR
   
   ; Put file there
-  File "src\Release\SlimFTPd.exe"
+  File "/oname=SlimFTPd.exe" "src\Release\SlimFTPd31.exe"
   File "src\ServiceTool.exe"
   File "src\slimftpd.conf"
 
